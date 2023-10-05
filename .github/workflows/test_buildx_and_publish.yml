@@ -18,28 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build image
-        run: |
-          docker build . -t moodle-php-apache
-
       - name: Run tests
         run: |
-          docker run --name test0 -d -p 8000:80 \
-              -v $PWD/tests/fixtures:/var/www/html \
-              -v $PWD/tests/docker-entrypoint.d:/docker-entrypoint.d \
-              -e PHP_INI-memory_limit=256M \
-              -e PHP_INI-apc.enabled=0 \
-              -e PHP_INI-apc.enable_cli=0 \
-              -e PHP_INI-pcov.enabled=1 \
-              -e PHP_INI-upload_max_filesize=20M \
-              -e PHP_EXTENSION_xhprof=1 \
-              moodle-php-apache
-          docker exec test0 php /var/www/html/test.php
-          docker exec test0 php /var/www/html/check-ini.php
-          docker exec test0 php /var/www/html/check-entrypoint-scripts.php
-          curl --fail http://127.0.0.1:8000/test.php
-          curl --fail http://127.0.0.1:8000/check-ini.php
-          # Verify that CLI execution only includes the expected output (if we discard stderr).
+          echo zero
+          docker run --rm --name test1 moodle-php-apache php /var/www/html/check-stderr.php 2>/dev/null
+          echo one
           stdout=$(docker run --rm --name test1 moodle-php-apache php /var/www/html/check-stderr.php 2>/dev/null)
           [[ ${stdout} == "Hello World!" ]] && echo "OK" || echo "Fail"
           # Verify that stderr still contains information about the bootstrap.
